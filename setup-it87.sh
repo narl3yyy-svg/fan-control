@@ -8,7 +8,17 @@ if [[ "${EUID}" -ne 0 ]]; then
 fi
 
 echo "Installing build dependencies..."
-pacman -S --needed --noconfirm dkms linux-headers git base-devel lm_sensors
+if command -v apt-get >/dev/null 2>&1; then
+  # Ubuntu / Debian
+  apt-get update
+  apt-get install -y dkms "linux-headers-$(uname -r)" git build-essential lm-sensors
+elif command -v pacman >/dev/null 2>&1; then
+  # Arch
+  pacman -S --needed --noconfirm dkms linux-headers git base-devel lm_sensors
+else
+  echo "Unsupported distro: install dkms, kernel headers, git, a C toolchain and lm-sensors manually."
+  exit 1
+fi
 
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "${WORKDIR}"' EXIT
